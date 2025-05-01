@@ -5,6 +5,7 @@ import schedule
 from datetime import datetime
 import os
 import re
+from dateutil import parser
 
 class FinJuiceNewsScraper:
     def __init__(self, api_url, output_file="critical_headlines.json"):
@@ -104,15 +105,40 @@ class FinJuiceNewsScraper:
     
     def save_data(self):
         """Save the headlines data to the JSON file"""
-        with open(self.output_file, 'w') as f:
-            json.dump(self.headlines, f, indent=2)
-        print(f"Data saved to {self.output_file}")
+        if not self.headlines:
+            return
+            
+        try:
+            # Get current time
+            current_time = datetime.now()
+            
+            # Filter headlines less than 5 minutes old
+            recent_headlines = []
+            for headline in self.headlines:
+                try:
+                    headline_time = parser.parse(headline['time'])
+                    time_diff = (current_time - headline_time).total_seconds() / 60
+                    if time_diff < 5:
+                        recent_headlines.append(headline)
+                except (ValueError, KeyError) as e:
+                    print(f"Error parsing time for headline: {e}")
+                    continue
+            
+            if not recent_headlines:
+                return
+                
+            # Save only recent headlines
+            with open(self.output_file, 'w') as f:
+                json.dump(recent_headlines, f, indent=2)
+            print(f"Data saved to {self.output_file}")
+        except Exception as e:
+            print(f"Error saving data: {e}")
     
     def start_scheduled_scraping(self, interval_minutes=5):
-        """Schedule the scraping to run at fixed intervals during trading hours"""
+        """Schedule the scraping to run at fixed intervals"""
         schedule.every(interval_minutes).minutes.do(self.run_if_trading_hours)
         
-        print(f"Scraper scheduled to run every {interval_minutes} minutes during trading hours")
+        print(f"Scraper scheduled to run every {interval_minutes} minutes")
         print("Press Ctrl+C to exit")
         
         # Run once immediately
@@ -124,16 +150,12 @@ class FinJuiceNewsScraper:
             time.sleep(1)
     
     def run_if_trading_hours(self):
-        """Only run the scraper during trading hours"""
         now = datetime.now()
         weekday = now.weekday()
         hour = now.hour
         
         # Trading hours: Monday to Friday, 9:30 AM to 4:00 PM
-        if 0 <= weekday <= 4 and 9 <= hour < 16:
-            # If it's between 9:30 and 4:00
-            if hour == 9 and now.minute < 30:
-                return  # Before market open
+        if 0 <= weekday <= 4 and 8 <= hour < 16:       
             self.scrape()
         else:
             print(f"Outside trading hours, skipping scrape at {now.strftime('%H:%M:%S')}")
@@ -145,4 +167,4 @@ if __name__ == "__main__":
     scraper = FinJuiceNewsScraper(api_url)
     
     # Set the interval in minutes (e.g., 5 minutes)
-    scraper.start_scheduled_scraping(interval_minutes=5)
+    scraper.start_scheduled_scraping(interval_minutes=1)
