@@ -18,7 +18,7 @@ This scraper targets the "active-critical" headlines (red highlighted breaking n
   - Unique news ID
   - Scrape timestamp
 - Avoids duplicate entries by tracking news IDs
-- Includes scheduled scraping during market hours (Monday-Friday, 9:30 AM - 4:00 PM)
+- Includes scheduled scraping during market hours (Monday-Friday, 8 AM - 4:00 PM)
 - Customizable scraping interval (default: every 5 minutes)
 
 ## Requirements
