@@ -61,44 +61,33 @@ class FinJuiceNewsScraper:
                     print("Full response:")
                     print(response_text)
                     return
-                
-                if 'News' in data and isinstance(data['News'], list):
-                    news_items = data['News']
-                    
-                    new_items = 0
-                    for item in news_items:
-                        # Check if the item has the 'active-critical' level
-                        level = item.get('Level', '')
-                        if 'active-critical' in level:
-                            headline_text = item.get('Title', '')
-                            time_text = item.get('PostedLong', '')
                             
-                            # Create headline object
-                            headline_data = {
-                                "headline": headline_text,
-                                "time": time_text,
-                                "level": level,
-                                "labels": item.get('Labels', []),
-                                "news_id": item.get('NewsID', ''),
-                                "scraped_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                            }
-                            
-                            # Check if this headline is already in our data
-                            if not any(h['news_id'] == headline_data['news_id'] for h in self.headlines):
-                                self.headlines.append(headline_data)
-                                new_items += 1
-                                print(f"New critical headline: {headline_text}")
+                for item in data:
                     
-                    print(f"Found {new_items} new critical headlines")
-                else:
-                    print("Unexpected API response format - 'd' key not found")
-                    print(f"Response contains keys: {list(data.keys())}")
+                    level = item.get("Level")
+                    if not ('active-critical' in level and 'active' in level):
+                        continue
+
+                    headline_data = {
+                        "headline": item.get("Title"),
+                        "time": item.get("PostedLong") or (item.get("Date") + " " + item.get("Time")),
+                        "level": level,
+                        "labels": item.get("Labels"),
+                        "news_id": item.get("NewsID") or item.get("ID"),
+                        "scraped_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    }
+ 
+                    self.headlines.append(headline_data)
+  
+                print(f"Found {len(self.headlines)} new critical headlines")
+               
             
             except json.JSONDecodeError as e:
                 print(f"Error parsing JSON: {e}")
                 print(f"Raw response: {response.text[:200]}...")  # Print first 200 chars
             
             self.save_data()
+            self.headlines = []
             
         except Exception as e:
             print(f"Error during scraping: {e}")
@@ -162,7 +151,7 @@ class FinJuiceNewsScraper:
 
 
 if __name__ == "__main__":
-    api_url = "https://live.financialjuice.com/FJService.asmx/Startup?info=%22EAAAAAV5Ztc%2Bltam62cRcX71rohbT3%2FNWmgAuMUGG1Z0MVXB7dk3%2Fi6NdikIbC%2BhMngX4kJQZrPcPFOAnR%2Bfvqrufncxy7zn7nLD1dGxju1HllhWLR3bYZDnPOzYSz7Ls0iOfQOzOTjzisYuiUdPtaBclkdeuCF7fa869owcXMV2osub%2Fg%2FiePe%2FhMIOQhnaaIh%2BR3MLtRrmOh%2BCHmcLT22c1e7Y4OqcQa6wQyQ1NYEX3mu0j8KwQW1gQELcG83ywyCGoKDzB%2BZOXiq%2ByUBaKvGyf0EFaWj8j95Hi4NSAtzZlIrrakPj60ZyEFN7Q1x0fo5rNA%3D%3D%22&TimeOffset=5.5&tabID=0&oldID=0&TickerID=0&FeedCompanyID=0&strSearch=&extraNID=0"
+    api_url = "https://live.financialjuice.com/FJService.asmx/GetPreviousNews?info=%22EAAAAEoNUlDjJhC%2B8QQZMqAtYlv9wI5hj3cJUEZnwJZlfh3lTQtDxaq7HAZDxqjkhtO6ExQGZijYR9NyXGZ%2F0UE3ziMMYzCRkXyVqugDJhR5D%2BfSsScg0lFWkv2r4IpGRZHGFfLxK6a%2FIYJH6r6zE7X3tyl0VvPUXpZOharrstvWNIE0kjXGwHmQrEq5U%2BhfpZz7Le2G4SwjDgtH2I%2BBL%2BnUjKXrGrshl1dlY9SZEXU7zvx%2BYOjDTciC23PlI%2Bl55PdBZjQ9UEr7su235bAJqmQz0LJEzMtnnF%2FR8gPU%2FI5SFB2i5ULrYwQov0yJtLZv4WGZBA%3D%3D%22&TimeOffset=-4&tabID=10&oldID=0&TickerID=0&FeedCompanyID=0&strSearch=%22%22&extraNID=0"
     
     scraper = FinJuiceNewsScraper(api_url)
     
