@@ -1,14 +1,15 @@
-# Financial Juice Critical News Scraper
+# Financial Juice Scraper
 
-A Python utility that scrapes critical market news headlines from the Financial Juice website (https://www.financialjuice.com/).
+A Python utility that scrapes critical market news headlines and economic events from the Financial Juice website (https://www.financialjuice.com/).
 
 ## Overview
 
-This scraper targets the "active-critical" headlines (red highlighted breaking news) from Financial Juice by directly accessing their API endpoint. It extracts and saves these important market-moving news items with timestamps and additional metadata.
+This scraper targets both "active-critical" headlines (red highlighted breaking news) and economic calendar events from Financial Juice by directly accessing their API endpoints. It extracts and saves these important market-moving news items and scheduled economic events with timestamps and additional metadata.
 
 ## Features
 
-- Directly interfaces with the Financial Juice API endpoint
+### News Scraping
+- Directly interfaces with the Financial Juice news API endpoint
 - Extracts "active-critical" news items from XML-wrapped JSON responses
 - Saves detailed news information to a JSON file including:
   - Headline text
@@ -17,9 +18,22 @@ This scraper targets the "active-critical" headlines (red highlighted breaking n
   - Labels
   - Unique news ID
   - Scrape timestamp
-- Avoids duplicate entries by tracking news IDs
+- Filters headlines less than 5 minutes old
 - Includes scheduled scraping during market hours (Monday-Friday, 8 AM - 4:00 PM)
-- Customizable scraping interval (default: every 5 minutes)
+
+### Events Scraping
+- Retrieves economic calendar events for the current day
+- Captures event details including:
+  - Event date and time
+  - Event title
+  - Actual, forecast, and previous values
+  - Breaking status
+- Saves events to date-specific JSON files
+
+### General Features
+- Modular design to handle both news and events scraping
+- Customizable scraping interval (default: every 5 minutes for news)
+- Reusable API response handling and JSON extraction
 
 ## Requirements
 
@@ -27,7 +41,9 @@ This scraper targets the "active-critical" headlines (red highlighted breaking n
 - Required packages:
   - requests
   - schedule
+  - pandas
   - json, time, datetime, os, re (standard library)
+  - dateutil.parser
 
 ## Usage
 
